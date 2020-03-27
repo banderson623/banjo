@@ -56,7 +56,7 @@ app.on('ready', () => {
       console.log('i think this is the action', action);
     },
     (error) => {
-      if (error) console.error('Failed to register protocol');
+      if (error) console.log('Failed to register protocol');
     }
   );
 });
