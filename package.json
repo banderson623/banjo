@@ -1,5 +1,5 @@
 {
-  "name": "voxmedia-banjo",
+  "name": "banjo",
   "version": "1.0.0",
   "description": "listening together",
   "main": "public/Main.js",
@@ -9,6 +9,8 @@
   "private": false,
   "homepage": "./",
   "dependencies": {
+    "electron-store": "^5.1.1",
+    "electron-window-state": "^5.0.3",
     "nodemon": "^2.0.2",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
@@ -20,8 +22,10 @@
     "run": "node index.js",
     "dev": "electron .",
     "start": "react-scripts start",
+    "build": "react-scripts build",
     "preelectron-pack": "npm run build",
-    "electron-pack": "build -c.extraMetadata.main=build/Main.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
     "client": "node client.js"
   },
   "devDependencies": {
@@ -42,13 +46,10 @@
     ]
   },
   "build": {
-    "appId": "nonExistentID",
+    "appId": "com.banderson623.Banjo",
     "files": [
       "build/**/*",
       "node_modules/**/*"
-    ],
-    "directories": {
-      "buildResources": "assets"
-    }
+    ]
   }
 }

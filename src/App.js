@@ -11,14 +11,15 @@ const ServerStatus = ({ connected, host, onChange = () => {} }) => {
   const className =
     'mr-2 h-3 w-3 rounded-full ' + (connected ? 'bg-green-700' : 'bg-red-700');
 
+  const words = connected ? 'Connected to ' : '';
   return (
     <div class="flex items-center">
       <div className={className} />
-      <div class="">
-        Connected to{' '}
+      <div>
+        {words}
         <input
           type="text"
-          class="appearance-none bg-transparent w-40 focus:bg-transparent focus:text-white"
+          class="appearance-none bg-transparent focus:bg-transparent focus:text-white"
           value={host}
           onChange={(e) => {
             onChange(e.currentTarget.value);
@@ -62,24 +63,106 @@ const Toggle = ({ state, onToggle = () => {} }) => {
   );
 };
 
+let timerId = null;
+
+const sendThrottledStateChange = ({
+  sync,
+  host,
+  roomName,
+  djRequested,
+  name,
+}) => {
+  if (timerId) clearTimeout(timerId);
+  timerId = setTimeout(() => {
+    ipcRenderer.send('stateChange', {
+      sync,
+      host,
+      roomName,
+      djRequested,
+      name,
+    });
+    timerId = null;
+  }, 1000);
+};
+
 export default function App() {
   // const roomDetails = useRooms();
   const [sync, setSync] = useState(true);
   const [host, setHost] = useState('localhost');
+  const [name, setName] = useState('Your Name');
+
+  const [artist, setArtist] = useState('Artist Name');
+  const [trackName, setTrackName] = useState('Track Name');
+  const [albumArtUrl, setAlbumArtUrl] = useState(
+    'https://i.scdn.co/image/ab67616d0000b2737fe4a82a08c4f0decbeddbc6'
+  );
+
+  const [connected, setConnected] = useState(false);
+
   const [roomName, setRoomName] = useState('vox-revenue-pals');
   const [djRequested, setDjRequested] = useState(false);
+  const [djName, setDjName] = useState('Jenine');
+  const [roomFriends, setRoomFriends] = useState([]);
 
   useEffect(() => {
-    ipcRenderer.send('stateChange', { sync, host, roomName, djRequested });
-  }, [sync, host, roomName, djRequested]);
+    ipcRenderer.on('roomUpdate', (event, state) => {
+      console.log('received roomUpdate', state);
+      if (state && state.people) {
+        setRoomFriends(state.people);
+      }
+    });
+
+    ipcRenderer.on('djUpdate', (event, state) => {
+      console.log('received djUpdate', state);
+      if (state && state.dj) {
+        setDjName(state.dj);
+      }
+    });
+  });
+
+  useEffect(() => {
+    ipcRenderer.on('disconnect', () => {
+      setConnected(false);
+    });
+    ipcRenderer.on('connect', () => {
+      setConnected(true);
+    });
+  });
+
+  useEffect(() => {
+    ipcRenderer.on('trackChanged', (event, { artist, name, artwork_url }) => {
+      console.log('got track changed', { artist, name, artwork_url });
+      setAlbumArtUrl(artwork_url);
+      setArtist(artist);
+      setTrackName(name);
+    });
+  });
+
+  useEffect(() => {
+    ipcRenderer.on('stateUpdateFromMain', (event, state) => {
+      console.log('stateUpdateFromMain', state);
+      if (state.sync) setSync(state.sync);
+      if (state.host) setHost(state.host);
+      if (state.roomName) setRoomName(state.roomName);
+      if (state.name) setName(state.name);
+      if (state.djName) setDjName(state.djName);
+      if (state.djRequested) setDjRequested(state.djRequested);
+    });
+  });
+
+  useEffect(() => {
+    // Throttle this event
+    sendThrottledStateChange({ sync, host, roomName, djRequested, name });
+    setDjRequested(false);
+  }, [sync, host, roomName, djRequested, name]);
 
   return (
     <div class="bg-gray-900 w-screen h-screen flex flex-col items-center">
-      <div class="absolute right-0 left-0 flex text-xs  items-center px-2 py-1 justify-between text-gray-600">
+      <div class="absolute right-0 left-0 flex text-xs  items-center pt-6 px-2 py-1 justify-between text-gray-600">
         <ServerStatus
           host={host}
           onChange={(h) => setHost(h)}
-          connected={true}
+          connected={connected}
         />
         <div class="flex items-center">
           <Toggle
@@ -93,13 +176,12 @@ export default function App() {
 
       <div class="w-full flex flex-col items-center justify-center pt-12 pb-3 bg-black">
         <div class="h-40 object-contain rounded shadow overflow-hidden">
-          <img
-            class="h-40"
-            src="https://i.scdn.co/image/ab67616d0000b2737fe4a82a08c4f0decbeddbc6"
-          />
+          <img class="h-40" src={albumArtUrl} />
         </div>
-        <p class="text-2xl text-gray-400 text-shadow mt-4">Yummy</p>
-        <p class="text text-gray-600 text-shadow mt-2">Justin Bieber</p>
+        <p class="text-2xl text-gray-400 text-shadow mt-4 truncate">
+          {trackName}
+        </p>
+        <p class="text text-gray-600 text-shadow mt-2 truncate">{artist}</p>
       </div>
 
       <div class="flex flex-col items-center w-full">
@@ -123,13 +205,13 @@ export default function App() {
             <div class="mr-2">
               <div class="text-gray-700">Your DJ</div>
               <div class="my-2 flex items-center text-green-600 text-xl">
-                Jenine
+                {djName}
               </div>
             </div>
           </div>
 
           <div class="pt-6 text-gray-600 w-full flex flex-wrap">
-            {['Drew', 'Colleen', 'Rick', 'Antoin']
+            {roomFriends
               .sort((a, b) => Math.random() - 0.5)
               .map((p) => (
                 <div
@@ -147,7 +229,10 @@ export default function App() {
         <div class="flex justify-between p-1">
           <input
             class="appearance-none bg-transparent px-2 text-xl w-1/2"
-            value="Brian "
+            value={name}
+            onChange={(e) => {
+              setName(e.currentTarget.value);
+            }}
             type="text"
           />
           <button
