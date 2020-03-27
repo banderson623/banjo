@@ -95,6 +95,46 @@ let currentHost = null;
 let currentRoom = null;
 let currentName = null;
 
+const resetMainContextVariables = () => {
+  currentHost = null;
+  currentRoom = null;
+  currentName = null;
+};
+
+const interactWithServerBasedOnState = ({
+  sync,
+  host,
+  djRequested,
+  roomName,
+  name,
+}) => {
+  client.setEnabled(sync);
+
+  if (currentHost !== host) {
+    currentHost = host;
+    const withHttps = host.includes('http') ? host : 'https://' + host;
+    client.disconnect();
+    client.connect(withHttps);
+  }
+
+  if (name !== currentName) {
+    currentName = name;
+    client.setName(currentName);
+  }
+
+  if (djRequested) {
+    console.log('asking to be the DJ');
+    client.becomeDj();
+    // Reset after this is recieved
+    webContents.send('stateUpdateFromMain', { djRequested: false });
+  }
+
+  if (roomName !== currentRoom) {
+    currentRoom = roomName;
+    client.joinRoom(currentRoom);
+  }
+};
+
 // app.whenReady().then(() => {
 const client = new BanjoClient();
 
@@ -122,35 +162,14 @@ client.onTrackChange(({ artist, name, artwork_url }) => {
   webContents.send('trackChanged', { artist, name, artwork_url });
 });
 
+ipcMain.on('forceReconnectWithServer', (event, state) => {
+  console.log('forcing reconnect with server', state);
+  resetMainContextVariables();
+  interactWithServerBasedOnState(state);
+});
+
 ipcMain.on('stateChange', (event, state) => {
-  console.log('client state changed', state);
-
-  client.setEnabled(state.sync);
-
-  if (currentHost !== state.host) {
-    currentHost = state.host;
-    const withHttps = state.host.includes('http')
-      ? state.host
-      : 'https://' + state.host;
-    client.disconnect();
-    client.connect(withHttps);
-  }
-
-  if (state.name !== currentName) {
-    currentName = state.name;
-    client.setName(currentName);
-  }
-
-  if (state.djRequested) {
-    console.log('asking to be the DJ');
-    client.becomeDj();
-    // Reset after this is recieved
-    webContents.send('stateUpdateFromMain', { djRequested: false });
-  }
-
-  if (state.roomName !== currentRoom) {
-    currentRoom = state.roomName;
-    client.joinRoom(currentRoom);
-  }
+  console.log('interact with server', state);
+  interactWithServerBasedOnState(state);
 });
 // });

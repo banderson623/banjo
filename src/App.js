@@ -152,6 +152,18 @@ export default function App() {
   });
 
   useEffect(() => {
+    if (stateRestored) {
+      ipcRenderer.send('forceReconnectWithServer', {
+        sync,
+        host,
+        roomName,
+        djRequested,
+        name,
+      });
+    }
+  }, [stateRestored]);
+
+  useEffect(() => {
     ipcRenderer.on('disconnect', () => {
       setConnected(false);
     });
