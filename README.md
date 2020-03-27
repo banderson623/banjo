@@ -13,10 +13,14 @@ Built with:
 - TailwindCSS
 - Websockets and socket.io
 
+Thans to Josh Laincz (@zohf) for his great icon!
+
 ## Using this app.
 
 1. Download the DMG from the [releases](https://github.com/banderson623/banjo/releases).
-2. Open the app, add your [banjo-server](https://github.com/banderson623/banjo-server) address
+1. Open the app, add your [banjo-server](https://github.com/banderson623/banjo-server) address
+1. Update your name
+1. Head to your favorite room
 
 ## Development
 
