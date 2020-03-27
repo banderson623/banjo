@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, protocol } = require('electron');
 const Store = require('electron-store');
 const windowStateKeeper = require('electron-window-state');
 const BanjoClient = require('../lib/banjo_client');
@@ -29,18 +29,34 @@ function createWindow() {
   });
 
   mainWindowState.manage(win);
-
-  // and load the index.html of the app.
-  win.loadURL('http://localhost:3000');
-  // win.webContents.openDevTools();
-
   webContents = win.webContents;
 
-  // win.loadURL(`file://${path.join(__dirname, '../build/index.html')}`);
+  if (process.env && process.env.ENV && process.env.ENV == 'dev') {
+    console.log('using react-scripts server');
+    win.loadURL('http://localhost:3000');
+    win.webContents.openDevTools();
+  } else {
+    win.loadURL(`file://${path.join(__dirname, '../build/index.html')}`);
+  }
 }
 
 app.on('window-all-closed', () => {
   app.quit();
+});
+
+app.on('ready', () => {
+  console.log('registering protocol!');
+  protocol.registerHttpProtocol(
+    'banjo',
+    (request) => {
+      console.log('got request', request);
+      const action = request.url.split('::')[1];
+      console.log('i think this is the action', action);
+    },
+    (error) => {
+      if (error) console.error('Failed to register protocol');
+    }
+  );
 });
 
 app.whenReady().then(createWindow);
@@ -55,6 +71,7 @@ app.whenReady().then(() => {
     setTimeout(() => {
       console.log('restoring last state', lastState);
       webContents.send('stateUpdateFromMain', lastState);
+      webContents.send('stateRestored');
     }, 500);
   } else {
     console.log('no last state', lastState);
@@ -67,7 +84,7 @@ setTimeout(() => {
     state.djRequested = false;
     store.set('lastState', state);
   });
-}, 5000);
+}, 500);
 
 let currentHost = null;
 let currentRoom = null;
@@ -93,14 +110,13 @@ client.onConnect(() => {
 });
 
 client.onTrackChange(({ artist, name, artwork_url }) => {
-  console.log('track changed', { artist, name, artwork_url });
   webContents.send('trackChanged', { artist, name, artwork_url });
 });
 
 ipcMain.on('stateChange', (event, state) => {
-  client.setEnabled(state.sync);
-
   console.log('client state changed', state);
+
+  client.setEnabled(state.sync);
 
   if (currentHost !== state.host) {
     currentHost = state.host;

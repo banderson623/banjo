@@ -35,8 +35,6 @@ const Toggle = ({ state, onToggle = () => {} }) => {
     'relative inline-block flex-shrink-0 h-4 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:shadow-outline ml-2 flex items-center ';
   className += state ? ' bg-green-600' : ' bg-gray-800';
 
-  // :class="{ 'translate-x-5': value, 'translate-x-0': !value }"
-
   return (
     <label
       class="flex items-center select-none cursor-pointer"
@@ -72,7 +70,6 @@ const sendThrottledStateChange = ({
   djRequested,
   name,
 }) => {
-  console.log('sending state change', djRequested);
   if (timerId) clearTimeout(timerId);
   timerId = setTimeout(() => {
     ipcRenderer.send('stateChange', {
@@ -99,10 +96,11 @@ export default function App() {
   );
 
   const [connected, setConnected] = useState(false);
+  const [stateRestored, setStateRestored] = useState(false);
 
   const [roomName, setRoomName] = useState('vox-revenue-pals');
   const [djRequested, setDjRequested] = useState(false);
-  const [djName, setDjName] = useState('Jenine');
+  const [djName, setDjName] = useState('');
   const [roomFriends, setRoomFriends] = useState([]);
 
   useEffect(() => {
@@ -120,6 +118,17 @@ export default function App() {
       }
     });
   });
+
+  useEffect(() => {
+    ipcRenderer.on('stateRestored', () => {
+      console.log('marking state as restored');
+      setStateRestored(true);
+    });
+  });
+
+  useEffect(() => {
+    console.log('tracking change', { sync, stateRestored });
+  }, [sync, stateRestored]);
 
   useEffect(() => {
     ipcRenderer.on('disconnect', () => {
@@ -142,7 +151,7 @@ export default function App() {
   useEffect(() => {
     ipcRenderer.on('stateUpdateFromMain', (event, state) => {
       console.log('stateUpdateFromMain', state);
-      if (state.sync) setSync(state.sync);
+      if (state.sync !== undefined) setSync(state.sync);
       if (state.host) setHost(state.host);
       if (state.roomName) setRoomName(state.roomName);
       if (state.name) setName(state.name);
@@ -152,9 +161,13 @@ export default function App() {
   });
 
   useEffect(() => {
-    // Throttle this event
+    // on send an event after the state has first been restored
+    if (!stateRestored) {
+      console.log('skipping this since state is not restored');
+    }
+
     sendThrottledStateChange({ sync, host, roomName, djRequested, name });
-  }, [sync, host, roomName, djRequested, name]);
+  }, [sync, host, roomName, djRequested, name, stateRestored]);
 
   return (
     <div class="bg-gray-900 w-screen h-screen flex flex-col items-center">
@@ -168,7 +181,15 @@ export default function App() {
           <Toggle
             state={sync}
             onToggle={() => {
-              setSync(!sync);
+              console.log(
+                'got sync toggle event: ',
+                sync,
+                'state restored starte',
+                stateRestored
+              );
+              if (stateRestored) {
+                setSync(!sync);
+              }
             }}
           />
         </div>

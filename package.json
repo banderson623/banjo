@@ -21,7 +21,7 @@
   },
   "scripts": {
     "run": "node index.js",
-    "dev": "electron .",
+    "dev": "ENV=dev electron .",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "preelectron-pack": "npm run build",
@@ -46,6 +46,15 @@
       "last 1 safari version"
     ]
   },
+  "protocols": [
+    {
+      "name": "Banjo Link",
+      "role": "Viewer",
+      "schemes": [
+        "banjo"
+      ]
+    }
+  ],
   "build": {
     "appId": "com.banderson623.Banjo",
     "files": [
