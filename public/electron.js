@@ -31,12 +31,12 @@ function createWindow() {
   mainWindowState.manage(win);
 
   // and load the index.html of the app.
-  // win.loadURL('http://localhost:3000');
+  win.loadURL('http://localhost:3000');
+  // win.webContents.openDevTools();
 
   webContents = win.webContents;
 
-  // win.webContents.openDevTools();
-  win.loadURL(`file://${path.join(__dirname, '../build/index.html')}`);
+  // win.loadURL(`file://${path.join(__dirname, '../build/index.html')}`);
 }
 
 app.on('window-all-closed', () => {
@@ -52,7 +52,6 @@ app.on('window-all-closed', () => {
 app.whenReady().then(() => {
   const lastState = store.get('lastState');
   if (lastState) {
-    // console.log(webContents);
     setTimeout(() => {
       console.log('restoring last state', lastState);
       webContents.send('stateUpdateFromMain', lastState);
@@ -101,6 +100,8 @@ client.onTrackChange(({ artist, name, artwork_url }) => {
 ipcMain.on('stateChange', (event, state) => {
   client.setEnabled(state.sync);
 
+  console.log('client state changed', state);
+
   if (currentHost !== state.host) {
     currentHost = state.host;
     const withHttps = state.host.includes('http')
@@ -116,7 +117,10 @@ ipcMain.on('stateChange', (event, state) => {
   }
 
   if (state.djRequested) {
+    console.log('asking to be the DJ');
     client.becomeDj();
+    // Reset after this is recieved
+    webContents.send('stateUpdateFromMain', { djRequested: false });
   }
 
   if (state.roomName !== currentRoom) {

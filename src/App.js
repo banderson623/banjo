@@ -72,6 +72,7 @@ const sendThrottledStateChange = ({
   djRequested,
   name,
 }) => {
+  console.log('sending state change', djRequested);
   if (timerId) clearTimeout(timerId);
   timerId = setTimeout(() => {
     ipcRenderer.send('stateChange', {
@@ -82,7 +83,7 @@ const sendThrottledStateChange = ({
       name,
     });
     timerId = null;
-  }, 1000);
+  }, 500);
 };
 
 export default function App() {
@@ -153,7 +154,6 @@ export default function App() {
   useEffect(() => {
     // Throttle this event
     sendThrottledStateChange({ sync, host, roomName, djRequested, name });
-    setDjRequested(false);
   }, [sync, host, roomName, djRequested, name]);
 
   return (

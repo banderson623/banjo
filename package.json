@@ -2,7 +2,7 @@
   "name": "banjo",
   "version": "1.0.0",
   "description": "listening together",
-  "main": "public/Main.js",
+  "main": "public/electron.js",
   "repository": "https://github.com/voxmedia/voxmedia-banjo",
   "author": "Brian Anderson <brian.anderson@voxmedia.com>",
   "license": "MIT",
@@ -16,7 +16,8 @@
     "react-dom": "^16.13.0",
     "react-scripts": "^3.4.0",
     "socket.io-client": "^2.3.0",
-    "spotify-node-applescript": "^1.1.1"
+    "spotify-node-applescript": "^1.1.1",
+    "react-scripts": "^3.4.0"
   },
   "scripts": {
     "run": "node index.js",
