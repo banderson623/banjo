@@ -30,6 +30,30 @@ const ServerStatus = ({ connected, host, onChange = () => {} }) => {
   );
 };
 
+const Error = ({ error, onDismiss = () => {} }) => {
+  if (!error) return false;
+
+  return (
+    <div
+      class="flex flex-col absolute top-0 bottom-0 left-0 right-0 p-6 justify-center "
+      style={{
+        backgroundColor: 'rgba(0,0,0,0.75)',
+      }}
+    >
+      <div class="bg-red-800 p-3 rounded shadow text-white">
+        <div class="text-red-400 text-sm upperca">Oh no, an error</div>
+        <div class="text-xl">{error}</div>
+        <button
+          class="mt-4  p-1 px-2  text-red-300 bg-red-900 border-red-400 rounded"
+          onClick={onDismiss}
+        >
+          Bummer!
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const Toggle = ({ state, onToggle = () => {} }) => {
   let className =
     'relative inline-block flex-shrink-0 h-4 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:shadow-outline ml-2 flex items-center ';
@@ -97,6 +121,7 @@ export default function App() {
 
   const [connected, setConnected] = useState(false);
   const [stateRestored, setStateRestored] = useState(false);
+  const [error, setError] = useState(null);
 
   const [roomName, setRoomName] = useState('vox-revenue-pals');
   const [djRequested, setDjRequested] = useState(false);
@@ -125,10 +150,6 @@ export default function App() {
       setStateRestored(true);
     });
   });
-
-  useEffect(() => {
-    console.log('tracking change', { sync, stateRestored });
-  }, [sync, stateRestored]);
 
   useEffect(() => {
     ipcRenderer.on('disconnect', () => {
@@ -171,6 +192,12 @@ export default function App() {
 
   return (
     <div class="bg-gray-900 w-screen h-screen flex flex-col items-center">
+      <Error
+        error={error}
+        onDismiss={() => {
+          setError(null);
+        }}
+      />
       <div class="absolute right-0 left-0 flex text-xs  items-center pt-6 px-2 py-1 justify-between text-gray-600">
         <ServerStatus
           host={host}

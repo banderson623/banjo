@@ -3,10 +3,12 @@ const Store = require('electron-store');
 const windowStateKeeper = require('electron-window-state');
 const BanjoClient = require('../lib/banjo_client');
 const store = new Store();
-
-require('events').defaultMaxListeners = 15;
-
 const path = require('path');
+const log = require('electron-log');
+
+if (!process.env || process.env.ENV !== 'dev') {
+  console.log = log.log;
+}
 
 let webContents = null;
 
@@ -71,10 +73,13 @@ app.whenReady().then(() => {
     setTimeout(() => {
       console.log('restoring last state', lastState);
       webContents.send('stateUpdateFromMain', lastState);
-      webContents.send('stateRestored');
+      webContents.send('stateRestored', {});
     }, 500);
   } else {
-    console.log('no last state', lastState);
+    setTimeout(() => {
+      console.log('no last state', lastState);
+      webContents.send('stateRestored', {});
+    }, 500);
   }
 });
 
@@ -107,6 +112,10 @@ client.onDisconnect(() => {
 
 client.onConnect(() => {
   webContents.send('connect', {});
+});
+
+client.onError((err) => {
+  webContents.send('error', { err });
 });
 
 client.onTrackChange(({ artist, name, artwork_url }) => {

@@ -9,6 +9,7 @@
   "private": false,
   "homepage": "./",
   "dependencies": {
+    "electron-log": "^4.1.0",
     "electron-store": "^5.1.1",
     "electron-window-state": "^5.0.3",
     "nodemon": "^2.0.2",
@@ -16,8 +17,7 @@
     "react-dom": "^16.13.0",
     "react-scripts": "^3.4.0",
     "socket.io-client": "^2.3.0",
-    "spotify-node-applescript": "^1.1.1",
-    "react-scripts": "^3.4.0"
+    "spotify-node-applescript": "^1.1.1"
   },
   "scripts": {
     "run": "node index.js",
@@ -57,9 +57,29 @@
   ],
   "build": {
     "appId": "com.banderson623.Banjo",
+    "asar": false,
+    "mac": {
+      "category": "public.app-category.utilities",
+      "icon": "assets/icon.icns"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 110,
+          "y": 150
+        },
+        {
+          "x": 240,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
     "files": [
       "build/**/*",
-      "node_modules/**/*"
+      "node_modules/**/*",
+      "lib/**/*"
     ]
   }
 }
