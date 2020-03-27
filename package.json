@@ -1,0 +1,54 @@
+{
+  "name": "voxmedia-banjo",
+  "version": "1.0.0",
+  "description": "listening together",
+  "main": "public/Main.js",
+  "repository": "https://github.com/voxmedia/voxmedia-banjo",
+  "author": "Brian Anderson <brian.anderson@voxmedia.com>",
+  "license": "MIT",
+  "private": false,
+  "homepage": "./",
+  "dependencies": {
+    "nodemon": "^2.0.2",
+    "react": "^16.13.0",
+    "react-dom": "^16.13.0",
+    "react-scripts": "^3.4.0",
+    "socket.io-client": "^2.3.0",
+    "spotify-node-applescript": "^1.1.1"
+  },
+  "scripts": {
+    "run": "node index.js",
+    "dev": "electron .",
+    "start": "react-scripts start",
+    "preelectron-pack": "npm run build",
+    "electron-pack": "build -c.extraMetadata.main=build/Main.js",
+    "client": "node client.js"
+  },
+  "devDependencies": {
+    "electron": "^8.2.0",
+    "electron-builder": "^22.4.1",
+    "prettier": "^2.0.2"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "build": {
+    "appId": "nonExistentID",
+    "files": [
+      "build/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    }
+  }
+}
