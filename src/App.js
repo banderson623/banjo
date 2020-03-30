@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import ErrorModal from './components/Error';
+import ServerStatus from './components/ServerStatus';
+import Toggle from './components/Toggle';
+import PopupInput from './components/PopupInput';
 
 import './styles.css';
 import './tailwind.css';
@@ -6,84 +10,6 @@ import './tailwind.css';
 const electron = window.require('electron');
 const fs = electron.remote.require('fs');
 const ipcRenderer = electron.ipcRenderer;
-
-const ServerStatus = ({ connected, host, onChange = () => {} }) => {
-  const className =
-    'mr-2 h-3 w-3 rounded-full ' + (connected ? 'bg-green-700' : 'bg-red-700');
-
-  const words = connected ? 'Connected to ' : '';
-  return (
-    <div class="flex items-center">
-      <div className={className} />
-      <div>
-        {words}
-        <input
-          type="text"
-          class="appearance-none bg-transparent focus:bg-transparent focus:text-white"
-          value={host}
-          onChange={(e) => {
-            onChange(e.currentTarget.value);
-          }}
-        />
-      </div>
-    </div>
-  );
-};
-
-const Error = ({ error, onDismiss = () => {} }) => {
-  if (!error) return false;
-
-  return (
-    <div
-      class="flex flex-col absolute top-0 bottom-0 left-0 right-0 p-6 justify-center "
-      style={{
-        backgroundColor: 'rgba(0,0,0,0.75)',
-      }}
-    >
-      <div class="bg-red-800 p-3 rounded shadow text-white">
-        <div class="text-red-400 text-sm upperca">Oh no, an error</div>
-        <div class="text-xl">{error}</div>
-        <button
-          class="mt-4  p-1 px-2  text-red-300 bg-red-900 border-red-400 rounded"
-          onClick={onDismiss}
-        >
-          Bummer!
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const Toggle = ({ state, onToggle = () => {} }) => {
-  let className =
-    'relative inline-block flex-shrink-0 h-4 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:shadow-outline ml-2 flex items-center ';
-  className += state ? ' bg-green-600' : ' bg-gray-800';
-
-  return (
-    <label
-      class="flex items-center select-none cursor-pointer"
-      title="This will control your copy of spotify when enabled"
-      onClick={onToggle}
-    >
-      Enabled
-      <span
-        className={className}
-        role="checkbox"
-        tabindex="0"
-        onClick={onToggle}
-        aria-checked={state ? 'On' : 'Off'}
-      >
-        <span
-          aria-hidden="true"
-          class="inline-block h-3 w-3 rounded-full bg-white shadow transform transition ease-in-out duration-200"
-          style={{
-            transform: state ? 'translate(8px,0)' : '',
-          }}
-        ></span>
-      </span>
-    </label>
-  );
-};
 
 let timerId = null;
 
@@ -204,7 +130,7 @@ export default function App() {
 
   return (
     <div class="bg-gray-900 w-screen h-screen flex flex-col items-center">
-      <Error
+      <ErrorModal
         error={error}
         onDismiss={() => {
           setError(null);
@@ -287,14 +213,16 @@ export default function App() {
 
       <div class="bg-black w-full items-center text-gray-300 absolute bottom-0">
         <div class="flex justify-between p-1">
-          <input
-            class="appearance-none bg-transparent px-2 text-xl w-1/2"
-            value={name}
-            onChange={(e) => {
-              setName(e.currentTarget.value);
-            }}
-            type="text"
-          />
+          <div class="appearance-none bg-transparent px-2 text-xl w-1/2">
+            <PopupInput
+              value={name}
+              label="Name"
+              helpText="...can include emojis 🎉"
+              onChange={(v) => setName(v)}
+            >
+              {name}
+            </PopupInput>
+          </div>
           <button
             class="whitespace-no-wrap font-bold border-2 rounded border-gray-700 text-gray-700 hover:text-green-400 hover:border-green-400 p-1 px-2 cursor-pointer"
             onClick={(e) => {

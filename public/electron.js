@@ -26,12 +26,22 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
     },
+    // initially hidden to prevent flash
+    show: false,
     frame: false,
     titleBarStyle: 'hidden',
   });
 
   mainWindowState.manage(win);
   webContents = win.webContents;
+
+  win.once('ready-to-show', () => {
+    win.show();
+  });
+
+  webContents.on('did-finish-load', () => {
+    console.log('finished loading');
+  });
 
   if (process.env && process.env.ENV && process.env.ENV == 'dev') {
     console.log('using react-scripts server');
@@ -67,29 +77,29 @@ app.on('window-all-closed', () => {
   app.quit();
 });
 
-app.whenReady().then(() => {
-  const lastState = store.get('lastState');
-  if (lastState) {
-    setTimeout(() => {
-      console.log('restoring last state', lastState);
-      webContents.send('stateUpdateFromMain', lastState);
-      webContents.send('stateRestored', {});
-    }, 500);
-  } else {
-    setTimeout(() => {
-      console.log('no last state', lastState);
-      webContents.send('stateRestored', {});
-    }, 500);
-  }
-});
+// app.whenReady().then(() => {
+//   const lastState = store.get('lastState');
+//   if (lastState) {
+//     setTimeout(() => {
+//       console.log('restoring last state', lastState);
+//       webContents.send('stateUpdateFromMain', lastState);
+//       webContents.send('stateRestored', {});
+//     }, 500);
+//   } else {
+//     setTimeout(() => {
+//       console.log('no last state', lastState);
+//       webContents.send('stateRestored', {});
+//     }, 500);
+//   }
+// });
 
-setTimeout(() => {
-  ipcMain.on('stateChange', (event, state) => {
-    console.log('storing state');
-    state.djRequested = false;
-    store.set('lastState', state);
-  });
-}, 500);
+// setTimeout(() => {
+//   ipcMain.on('stateChange', (event, state) => {
+//     console.log('storing state');
+//     state.djRequested = false;
+//     store.set('lastState', state);
+//   });
+// }, 500);
 
 let currentHost = null;
 let currentRoom = null;
