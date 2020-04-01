@@ -3,6 +3,7 @@ import ErrorModal from './components/Error';
 import ServerStatus from './components/ServerStatus';
 import Toggle from './components/Toggle';
 import PopupInput from './components/PopupInput';
+import TrackDisplay from './components/TrackDisplay';
 
 import './styles.css';
 import './tailwind.css';
@@ -11,32 +12,10 @@ const electron = window.require('electron');
 const fs = electron.remote.require('fs');
 const ipcRenderer = electron.ipcRenderer;
 
-let timerId = null;
-
-const sendThrottledStateChange = ({
-  sync,
-  host,
-  roomName,
-  djRequested,
-  name,
-}) => {
-  if (timerId) clearTimeout(timerId);
-  timerId = setTimeout(() => {
-    ipcRenderer.send('stateChange', {
-      sync,
-      host,
-      roomName,
-      djRequested,
-      name,
-    });
-    timerId = null;
-  }, 500);
-};
-
 export default function App() {
   // const roomDetails = useRooms();
   const [sync, setSync] = useState(true);
-  const [host, setHost] = useState('localhost');
+  const [host, setHost] = useState('banjo.bitbyteyum.com');
   const [name, setName] = useState('Your Name');
 
   const [artist, setArtist] = useState('Artist Name');
@@ -49,7 +28,7 @@ export default function App() {
   const [stateRestored, setStateRestored] = useState(false);
   const [error, setError] = useState(null);
 
-  const [roomName, setRoomName] = useState('vox-revenue-pals');
+  const [roomName, setRoomName] = useState('lobby');
   const [djRequested, setDjRequested] = useState(false);
   const [djName, setDjName] = useState('');
   const [roomFriends, setRoomFriends] = useState([]);
@@ -76,18 +55,6 @@ export default function App() {
       setStateRestored(true);
     });
   });
-
-  useEffect(() => {
-    if (stateRestored) {
-      ipcRenderer.send('forceReconnectWithServer', {
-        sync,
-        host,
-        roomName,
-        djRequested,
-        name,
-      });
-    }
-  }, [stateRestored]);
 
   useEffect(() => {
     ipcRenderer.on('disconnect', () => {
@@ -120,13 +87,19 @@ export default function App() {
   });
 
   useEffect(() => {
-    // on send an event after the state has first been restored
-    if (!stateRestored) {
-      console.log('skipping this since state is not restored');
-    }
-
-    sendThrottledStateChange({ sync, host, roomName, djRequested, name });
+    console.log('web state is changing');
+    ipcRenderer.send('stateChange', {
+      sync,
+      host,
+      roomName,
+      djRequested,
+      name,
+    });
   }, [sync, host, roomName, djRequested, name, stateRestored]);
+
+  const sendReaction = (reaction) => {
+    ipcRenderer.send('reacted', reaction);
+  };
 
   return (
     <div class="bg-gray-900 w-screen h-screen flex flex-col items-center">
@@ -160,32 +133,38 @@ export default function App() {
         </div>
       </div>
 
-      <div class="w-full flex flex-col items-center justify-center pt-12 pb-3 bg-black">
-        <div class="h-40 object-contain rounded shadow overflow-hidden">
-          <img class="h-40" src={albumArtUrl} />
+      <TrackDisplay
+        albumArtUrl={albumArtUrl}
+        trackName={trackName}
+        artistName={artist}
+      >
+        <div class="p-2 flex w-full">
+          {['🔥', '🥴', '😱'].map((r) => (
+            <button
+              class="appearance-none flex-grow flex-1 bg-gray-900 border border-transparent p-1 mx-1 rounded hover:border-gray-700"
+              onClick={() => sendReaction(r)}
+            >
+              {r}
+            </button>
+          ))}
         </div>
-        <p class="text-2xl text-gray-400 text-shadow mt-4 truncate">
-          {trackName}
-        </p>
-        <p class="text text-gray-600 text-shadow mt-2 truncate">{artist}</p>
-      </div>
+      </TrackDisplay>
 
       <div class="flex flex-col items-center w-full">
         <div class="bg-gray-900 w-full p-2 flex flex-col text-gray-300 text-center">
           <div class="flex justify-between p-2 border-b border-gray-800">
             <div class="flex flex-col items-center">
               <label class="text-gray-700">Room</label>
-              <input
-                class="appearance-none bg-transparent rounded p-1 text-xl text-center"
+              <PopupInput
                 value={roomName}
+                label="Room Name"
+                helpText="Join your friends in a custom room"
                 onChange={(e) => {
-                  setRoomName(e.currentTarget.value);
+                  setRoomName(e);
                 }}
-                type="text"
-                style={{
-                  backgroundColor: 'rgba(0,0,0,0.15)',
-                }}
-              />
+              >
+                <div class="p-1 text-xl text-center">{roomName}</div>
+              </PopupInput>
             </div>
 
             <div class="mr-2">
@@ -197,16 +176,14 @@ export default function App() {
           </div>
 
           <div class="pt-6 text-gray-600 w-full flex flex-wrap">
-            {roomFriends
-              .sort((a, b) => Math.random() - 0.5)
-              .map((p) => (
-                <div
-                  class="m-1 px-2 py-1 rounded"
-                  style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}
-                >
-                  {p}
-                </div>
-              ))}
+            {roomFriends.map((p) => (
+              <div
+                class="m-1 px-2 py-1 rounded"
+                style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}
+              >
+                {p}
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -223,14 +200,16 @@ export default function App() {
               {name}
             </PopupInput>
           </div>
-          <button
-            class="whitespace-no-wrap font-bold border-2 rounded border-gray-700 text-gray-700 hover:text-green-400 hover:border-green-400 p-1 px-2 cursor-pointer"
-            onClick={(e) => {
-              setDjRequested(true);
-            }}
-          >
-            Become the DJ!
-          </button>
+          {djName !== name && (
+            <button
+              class="whitespace-no-wrap font-bold border-2 rounded border-gray-700 text-gray-700 hover:text-green-400 hover:border-green-400 p-1 px-2 cursor-pointer"
+              onClick={(e) => {
+                setDjRequested(true);
+              }}
+            >
+              Become the DJ!
+            </button>
+          )}
         </div>
       </div>
     </div>

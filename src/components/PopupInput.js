@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { render } from 'react-dom';
 
 export default ({
   children,
@@ -10,6 +11,16 @@ export default ({
 }) => {
   const [isShown, setShown] = useState(shown);
   const [currentValue, setValue] = useState(value);
+  const [renderCount, setRenderCount] = useState(0);
+
+  console.log('popup form started for', label, value, currentValue);
+
+  useEffect(() => {
+    if (value !== currentValue) {
+      setValue(value);
+      console.log('setting value', currentValue);
+    }
+  }, [value]);
 
   if (!isShown)
     return (
@@ -26,13 +37,13 @@ export default ({
     <div>
       {children}
       <div
-        class="flex flex-col fixed top-0 bottom-0 left-0 right-0 p-6 justify-center "
+        class="flex flex-col fixed top-0 bottom-0 left-0 right-0 p-6 justify-center"
         style={{
           backgroundColor: 'rgba(0,0,0,0.5)',
         }}
       >
         <div class="bg-blue-800 p-3 rounded shadow text-white">
-          <label class="text-blue-200 text">
+          <label class="text-blue-200">
             {label}
             <input
               class="text-xl w-full mt-2 bg-blue-700 rounded p-1 text-blue-100"
