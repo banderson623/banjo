@@ -16,7 +16,7 @@ export default function App() {
   // const roomDetails = useRooms();
   const [sync, setSync] = useState(true);
   const [host, setHost] = useState('banjo.bitbyteyum.com');
-  const [name, setName] = useState('Your Name');
+  const [name, setName] = useState(null);
 
   const [artist, setArtist] = useState('Artist Name');
   const [trackName, setTrackName] = useState('Track Name');
@@ -32,6 +32,14 @@ export default function App() {
   const [djRequested, setDjRequested] = useState(false);
   const [djName, setDjName] = useState('');
   const [roomFriends, setRoomFriends] = useState([]);
+
+  const canNotifyOfStateChange = () => {
+    return !!stateRestored && !!name;
+  };
+
+  const requestDJ = () => {
+    setDjRequested(true);
+  };
 
   useEffect(() => {
     ipcRenderer.on('roomUpdate', (event, state) => {
@@ -54,7 +62,7 @@ export default function App() {
       console.log('marking state as restored');
       setStateRestored(true);
     });
-  });
+  }, [stateRestored, name]);
 
   useEffect(() => {
     ipcRenderer.on('disconnect', () => {
@@ -82,24 +90,21 @@ export default function App() {
       if (state.roomName) setRoomName(state.roomName);
       if (state.name) setName(state.name);
       if (state.djName) setDjName(state.djName);
-      if (state.djRequested) setDjRequested(state.djRequested);
+      if (state.djRequested !== undefined) setDjRequested(state.djRequested);
     });
   });
 
   useEffect(() => {
-    console.log('web state is changing');
-    ipcRenderer.send('stateChange', {
-      sync,
-      host,
-      roomName,
-      djRequested,
-      name,
-    });
+    if (canNotifyOfStateChange()) {
+      ipcRenderer.send('stateChange', {
+        sync,
+        host,
+        roomName,
+        djRequested,
+        name,
+      });
+    }
   }, [sync, host, roomName, djRequested, name, stateRestored]);
-
-  const sendReaction = (reaction) => {
-    ipcRenderer.send('reacted', reaction);
-  };
 
   return (
     <div class="bg-gray-900 w-screen h-screen flex flex-col items-center">
@@ -137,18 +142,7 @@ export default function App() {
         albumArtUrl={albumArtUrl}
         trackName={trackName}
         artistName={artist}
-      >
-        <div class="p-2 flex w-full">
-          {['🔥', '🥴', '😱'].map((r) => (
-            <button
-              class="appearance-none flex-grow flex-1 bg-gray-900 border border-transparent p-1 mx-1 rounded hover:border-gray-700"
-              onClick={() => sendReaction(r)}
-            >
-              {r}
-            </button>
-          ))}
-        </div>
-      </TrackDisplay>
+      ></TrackDisplay>
 
       <div class="flex flex-col items-center w-full">
         <div class="bg-gray-900 w-full p-2 flex flex-col text-gray-300 text-center">
@@ -190,10 +184,13 @@ export default function App() {
 
       <div class="bg-black w-full items-center text-gray-300 absolute bottom-0">
         <div class="flex justify-between p-1">
-          <div class="appearance-none bg-transparent px-2 text-xl w-1/2">
+          <div class="bg-transparent px-2 text-xl w-1/2">
             <PopupInput
               value={name}
-              label="Name"
+              shouldShowPopUp={() => {
+                return name === null && stateRestored;
+              }}
+              label="Enter your name"
               helpText="...can include emojis 🎉"
               onChange={(v) => setName(v)}
             >
@@ -203,9 +200,7 @@ export default function App() {
           {djName !== name && (
             <button
               class="whitespace-no-wrap font-bold border-2 rounded border-gray-700 text-gray-700 hover:text-green-400 hover:border-green-400 p-1 px-2 cursor-pointer"
-              onClick={(e) => {
-                setDjRequested(true);
-              }}
+              onClick={requestDJ}
             >
               Become the DJ!
             </button>

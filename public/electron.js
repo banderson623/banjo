@@ -90,8 +90,10 @@ app.on('window-all-closed', () => {
 });
 
 const restoreState = () => {
-  console.log('restoring state');
-  const lastState = store.get('lastState');
+  let lastState = store.get('lastState');
+  // lastState = false;
+  console.log('restoring state', lastState);
+
   if (lastState) {
     webContents.send('stateUpdateFromMain', lastState);
     webContents.send('stateRestored', {});
@@ -103,8 +105,10 @@ const restoreState = () => {
 
 ipcMain.on('stateChange', (event, state) => {
   if (wasStateRestored) {
-    console.log('storing state');
+    console.log('interact with server', state);
+    interactWithServerBasedOnState(state);
     state.djRequested = false;
+    console.log('storing state', state);
     store.set('lastState', state);
   } else {
     console.log('skipping state change storage until web restored', state);
@@ -193,10 +197,3 @@ ipcMain.on('forceReconnectWithServer', (event, state) => {
   resetMainContextVariables();
   interactWithServerBasedOnState(state);
 });
-
-ipcMain.on('stateChange', (event, state) => {
-  if (!wasStateRestored) return;
-  console.log('interact with server', state);
-  interactWithServerBasedOnState(state);
-});
-// });

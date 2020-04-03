@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { render } from 'react-dom';
 
 export default ({
   children,
   shown,
+  shouldShowPopUp = () => false,
   label,
   helpText,
   value,
   onChange = () => {},
 }) => {
-  const [isShown, setShown] = useState(shown);
+  const [isShown, setShown] = useState(false);
   const [currentValue, setValue] = useState(value);
-  const [renderCount, setRenderCount] = useState(0);
 
-  console.log('popup form started for', label, value, currentValue);
+  useEffect(() => {
+    if (!isShown) {
+      setShown(shouldShowPopUp());
+    }
+  }, [isShown, shouldShowPopUp]);
 
   useEffect(() => {
     if (value !== currentValue) {
@@ -43,7 +46,7 @@ export default ({
         }}
       >
         <div class="bg-blue-800 p-3 rounded shadow text-white">
-          <label class="text-blue-200">
+          <label class="text-blue-200 text-xl">
             {label}
             <input
               class="text-xl w-full mt-2 bg-blue-700 rounded p-1 text-blue-100"
@@ -60,7 +63,7 @@ export default ({
             />
             {helpText && <p class="mt-2 text-sm text-blue-400">{helpText}</p>}
           </label>
-          <div class="mt-4 flex justify-end">
+          <div class="mt-4 flex justify-end text-base">
             <button
               class="mx-1 p-1 px-2 text-blue-900 bg-blue-700 rounded hover:bg-blue-600"
               onClick={() => {

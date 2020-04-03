@@ -62,12 +62,14 @@
     "appId": "com.banderson623.Banjo",
     "asar": false,
     "mac": {
+      "target": "default",
       "category": "public.app-category.utilities",
       "icon": "assets/icon.icns",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "assets/entitlements.mac.plist",
-      "entitlementsInherit": "assets/entitlements.mac.plist"
+      "entitlementsInherit": "assets/entitlements.mac.plist",
+      "identity": "Brian Anderson (WH7M7NUHYE)"
     },
     "dmg": {
       "sign": false,
