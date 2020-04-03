@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "listening together",
   "main": "public/electron.js",
-  "repository": "https://github.com/voxmedia/voxmedia-banjo",
-  "author": "Brian Anderson <brian.anderson@voxmedia.com>",
+  "repository": "https://github.com/banderson623/banjo",
+  "author": "Brian Anderson <banderson623@gmail.com>",
   "license": "MIT",
   "private": false,
   "homepage": "./",
@@ -17,7 +17,8 @@
     "react-dom": "^16.13.0",
     "react-scripts": "^3.4.0",
     "socket.io-client": "^2.3.0",
-    "spotify-node-applescript": "^1.1.1"
+    "spotify-node-applescript": "^1.1.1",
+    "update-electron-app": "^1.5.0"
   },
   "scripts": {
     "run": "node index.js",
@@ -25,13 +26,15 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "preelectron-pack": "npm run build",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder",
+    "pack": "react-scripts build && electron-builder --dir",
+    "dist": "react-scripts build && electron-builder",
     "client": "node client.js"
   },
   "devDependencies": {
+    "dotenv": "^8.2.0",
     "electron": "^8.2.0",
     "electron-builder": "^22.4.1",
+    "electron-notarize": "^0.3.0",
     "prettier": "^2.0.2"
   },
   "browserslist": {
@@ -59,10 +62,17 @@
     "appId": "com.banderson623.Banjo",
     "asar": false,
     "mac": {
+      "target": "default",
       "category": "public.app-category.utilities",
-      "icon": "assets/icon.icns"
+      "icon": "assets/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist",
+      "identity": "Brian Anderson (WH7M7NUHYE)"
     },
     "dmg": {
+      "sign": false,
       "contents": [
         {
           "x": 110,

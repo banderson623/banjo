@@ -24,5 +24,4 @@ yarn-debug.log*
 yarn-error.log*
 
 .env
-google_account.json
 node_modules

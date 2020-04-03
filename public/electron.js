@@ -5,12 +5,15 @@ const BanjoClient = require('../lib/banjo_client');
 const store = new Store();
 const path = require('path');
 const log = require('electron-log');
+require('update-electron-app')();
 
 if (!process.env || process.env.ENV !== 'dev') {
   console.log = log.log;
 }
 
 let webContents = null;
+let isRefresh = false;
+let wasStateRestored = false;
 
 function createWindow() {
   let mainWindowState = windowStateKeeper({});
@@ -26,12 +29,31 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
     },
+    // initially hidden to prevent flash
+    show: false,
     frame: false,
     titleBarStyle: 'hidden',
   });
 
   mainWindowState.manage(win);
   webContents = win.webContents;
+
+  win.once('ready-to-show', () => {
+    console.log('ready to show!');
+    win.show();
+  });
+
+  webContents.on('did-start-loading', () => {
+    console.log('about to load');
+    wasStateRestored = false;
+  });
+
+  webContents.on('dom-ready', () => {
+    console.log('dom-ready');
+    wasStateRestored = false;
+    restoreState();
+    isRefresh = true;
+  });
 
   if (process.env && process.env.ENV && process.env.ENV == 'dev') {
     console.log('using react-scripts server');
@@ -67,29 +89,35 @@ app.on('window-all-closed', () => {
   app.quit();
 });
 
-app.whenReady().then(() => {
-  const lastState = store.get('lastState');
+const restoreState = () => {
+  let lastState = store.get('lastState');
+  // lastState = false;
+  console.log('restoring state', lastState);
+
   if (lastState) {
-    setTimeout(() => {
-      console.log('restoring last state', lastState);
-      webContents.send('stateUpdateFromMain', lastState);
-      webContents.send('stateRestored', {});
-    }, 500);
+    webContents.send('stateUpdateFromMain', lastState);
+    webContents.send('stateRestored', {});
   } else {
-    setTimeout(() => {
-      console.log('no last state', lastState);
-      webContents.send('stateRestored', {});
-    }, 500);
+    webContents.send('stateRestored', {});
+  }
+  wasStateRestored = true;
+};
+
+ipcMain.on('stateChange', (event, state) => {
+  if (wasStateRestored) {
+    console.log('interact with server', state);
+    interactWithServerBasedOnState(state);
+    state.djRequested = false;
+    console.log('storing state', state);
+    store.set('lastState', state);
+  } else {
+    console.log('skipping state change storage until web restored', state);
   }
 });
 
-setTimeout(() => {
-  ipcMain.on('stateChange', (event, state) => {
-    console.log('storing state');
-    state.djRequested = false;
-    store.set('lastState', state);
-  });
-}, 500);
+ipcMain.on('reacted', (event, reaction) => {
+  console.log('got reaction', reaction);
+});
 
 let currentHost = null;
 let currentRoom = null;
@@ -163,13 +191,9 @@ client.onTrackChange(({ artist, name, artwork_url }) => {
 });
 
 ipcMain.on('forceReconnectWithServer', (event, state) => {
+  if (!wasStateRestored) return;
+
   console.log('forcing reconnect with server', state);
   resetMainContextVariables();
   interactWithServerBasedOnState(state);
 });
-
-ipcMain.on('stateChange', (event, state) => {
-  console.log('interact with server', state);
-  interactWithServerBasedOnState(state);
-});
-// });
