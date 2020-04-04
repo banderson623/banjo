@@ -5,7 +5,7 @@ const BanjoClient = require('../lib/banjo_client');
 const store = new Store();
 const path = require('path');
 const log = require('electron-log');
-require('update-electron-app')();
+require('update-electron-app')({ updateInterval: '5 minutes', logger: log });
 
 if (!process.env || process.env.ENV !== 'dev') {
   console.log = log.log;
@@ -115,10 +115,6 @@ ipcMain.on('stateChange', (event, state) => {
   }
 });
 
-ipcMain.on('reacted', (event, reaction) => {
-  console.log('got reaction', reaction);
-});
-
 let currentHost = null;
 let currentRoom = null;
 let currentName = null;
@@ -190,10 +186,18 @@ client.onTrackChange(({ artist, name, artwork_url }) => {
   webContents.send('trackChanged', { artist, name, artwork_url });
 });
 
+client.using('ReactionPlugin', (plugin) => {
+  plugin.onReaction(({ reaction }) => {
+    webContents.send('reacted', { reaction });
+  });
+  ipcMain.on('reacted', (_, reaction) => {
+    // console.log('trying to send reaciton', typeof plugin.sendReaction);
+    plugin.sendReaction(reaction);
+  });
+});
+
 ipcMain.on('forceReconnectWithServer', (event, state) => {
   if (!wasStateRestored) return;
-
-  console.log('forcing reconnect with server', state);
   resetMainContextVariables();
   interactWithServerBasedOnState(state);
 });
