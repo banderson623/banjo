@@ -29,7 +29,7 @@
     "pack": "react-scripts build && electron-builder --dir",
     "dist": "react-scripts build && electron-builder && electron-osx-sign dist/mac/banjo.app",
     "sign": "electron-osx-sign dist/mac/banjo.app",
-    "client": "node client.js"
+    "stress": "node ./scripts/stress.js"
   },
   "devDependencies": {
     "dotenv": "^8.2.0",
