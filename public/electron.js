@@ -168,6 +168,7 @@ const client = new BanjoClient();
 
 client.onRoomFriendsChange((friends) => {
   webContents.send('roomUpdate', { people: friends });
+  app.setBadgeCount(friends.length - 1);
 });
 
 client.onDjUpdate((dj) => {

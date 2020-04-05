@@ -1,6 +1,6 @@
 {
   "name": "banjo",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "listening together",
   "main": "public/electron.js",
   "repository": "https://github.com/banderson623/banjo",
@@ -29,7 +29,7 @@
     "pack": "react-scripts build && electron-builder --dir",
     "dist": "react-scripts build && electron-builder && electron-osx-sign dist/mac/banjo.app",
     "sign": "electron-osx-sign dist/mac/banjo.app",
-    "client": "node client.js"
+    "stress": "node ./scripts/stress.js"
   },
   "devDependencies": {
     "dotenv": "^8.2.0",
