@@ -17,6 +17,10 @@ export default {
   '👎': {
     audioUrl: 'boo.m4a',
   },
+  'dj-change': {
+    audioUrl: 'scratch.m4a',
+    hidden: true,
+  },
 };
 
 export const REACTION_BASE_PATH = 'reactions/';

@@ -15,6 +15,11 @@ let webContents = null;
 let isRefresh = false;
 let wasStateRestored = false;
 
+const STATE_KEY = 'state-v1' + (process.env && process.env.ENV);
+console.log(`using state key ${STATE_KEY}`);
+
+// process.env.ENV !== 'dev';
+
 function createWindow() {
   let mainWindowState = windowStateKeeper({});
 
@@ -90,7 +95,7 @@ app.on('window-all-closed', () => {
 });
 
 const restoreState = () => {
-  let lastState = store.get('lastState');
+  let lastState = store.get(STATE_KEY);
   // lastState = false;
   console.log('restoring state', lastState);
 
@@ -105,11 +110,10 @@ const restoreState = () => {
 
 ipcMain.on('stateChange', (event, state) => {
   if (wasStateRestored) {
-    console.log('interact with server', state);
     interactWithServerBasedOnState(state);
     state.djRequested = false;
     console.log('storing state', state);
-    store.set('lastState', state);
+    store.set(STATE_KEY, state);
   } else {
     console.log('skipping state change storage until web restored', state);
   }
@@ -187,13 +191,17 @@ client.onTrackChange(({ artist, name, artwork_url }) => {
 });
 
 client.using('ReactionPlugin', (plugin) => {
-  plugin.onReaction(({ reaction }) => {
-    webContents.send('reacted', { reaction });
+  plugin.onReaction((reaction) => {
+    console.log('sending reaction to web', reaction);
+    webContents.send('reaction', reaction);
   });
   ipcMain.on('reacted', (_, reaction) => {
-    // console.log('trying to send reaciton', typeof plugin.sendReaction);
     plugin.sendReaction(reaction);
   });
+});
+
+client.onVolumeChange((volume) => {
+  webContents.send('setVolume', volume / 100.0);
 });
 
 ipcMain.on('forceReconnectWithServer', (event, state) => {
