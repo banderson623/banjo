@@ -1,6 +1,6 @@
 {
   "name": "banjo",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "listening together",
   "main": "public/electron.js",
   "repository": "https://github.com/banderson623/banjo",

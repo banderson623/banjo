@@ -7,6 +7,9 @@ export default {
   '🤩': {
     audioUrl: 'yeet.m4a',
   },
+  '💥': {
+    audioUrl: 'rap-horn.m4a',
+  },
   '😏': {
     audioUrl: 'oh-yeah.m4a',
   },
