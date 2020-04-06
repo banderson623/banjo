@@ -1,17 +1,9 @@
 const BanjoClient = require('../lib/banjo_client');
 
-const clients = 250;
+const clients = 10;
 const durationInSeconds = 10;
 
-const Rooms = [
-  'testRoom-1',
-  'testRoom-2',
-  'testRoom-3',
-  'bieber pals',
-  'funzone',
-  'no',
-  'quiet',
-];
+const Rooms = ['concert', 'lobby'];
 const Reactions = ['🔥', '👎'];
 const randomName = () => Math.random().toString(36).substring(7);
 
