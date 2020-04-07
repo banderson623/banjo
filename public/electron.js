@@ -5,7 +5,10 @@ const BanjoClient = require('../lib/banjo_client');
 const store = new Store();
 const path = require('path');
 const log = require('electron-log');
-require('update-electron-app')({ updateInterval: '5 minutes', logger: log });
+require('update-electron-app')({
+  updateInterval: '5 minutes',
+  logger: log,
+});
 
 if (!process.env || process.env.ENV !== 'dev') {
   console.log = log.log;
@@ -168,7 +171,7 @@ const client = new BanjoClient();
 
 client.onRoomFriendsChange((friends) => {
   webContents.send('roomUpdate', { people: friends });
-  app.setBadgeCount(friends.length - 1);
+  app.setBadgeCount(Math.max(0, friends.length - 1));
 });
 
 client.onDjUpdate((dj) => {

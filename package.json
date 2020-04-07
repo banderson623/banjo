@@ -1,6 +1,6 @@
 {
   "name": "banjo",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "description": "listening together",
   "main": "public/electron.js",
   "repository": "https://github.com/banderson623/banjo",
@@ -27,7 +27,7 @@
     "build": "react-scripts build",
     "preelectron-pack": "npm run build",
     "pack": "react-scripts build && electron-builder --dir",
-    "dist": "react-scripts build && electron-builder && electron-osx-sign dist/mac/banjo.app",
+    "dist": "react-scripts build && electron-builder --publish always",
     "sign": "electron-osx-sign dist/mac/banjo.app",
     "stress": "node ./scripts/stress.js"
   },
@@ -70,8 +70,12 @@
       "gatekeeperAssess": false,
       "entitlements": "assets/entitlements.mac.plist",
       "entitlementsInherit": "assets/entitlements.mac.plist",
-      "identity": "Brian Anderson (WH7M7NUHYE)"
+      "identity": null,
+      "publish": [
+        "github"
+      ]
     },
+    "afterPack": "./scripts/sign.js",
     "dmg": {
       "sign": false,
       "contents": [

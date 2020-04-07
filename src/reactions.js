@@ -1,6 +1,5 @@
 export default {
-  '🔥': {
-    label: '🔥',
+  '👏': {
     audioUrl: 'crowd.m4a',
     volume: 1,
   },
